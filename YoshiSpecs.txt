@@ -1,0 +1,18 @@
+Layout
+	Playgrid:
+		Base: x=4, y=8
+		Top, x=4, y=1
+	
+Movement
+	Moves down half a block every
+		Slow: 500ms
+		Fast: 250ms
+		Down button: 31ms
+	
+Block appearance
+	Min 2 blocks (of any type)
+	Up to 4 blocks (of any type)
+	Arbitrary:
+		Odds of 3: 1/50
+		odds of 4: 1/200
+		
