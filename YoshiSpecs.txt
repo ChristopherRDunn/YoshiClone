@@ -16,3 +16,12 @@ Block appearance
 		Odds of 3: 1/50
 		odds of 4: 1/200
 		
+Lifecycle
+* For each game tile, if it's falling (need to check the falling speed here, should that be the fps?) check
+	* If there's no tile below them, move them down
+	* If they match the block below them, shatter them both
+	* If they're a top shell, check for a matching bottom shell
+		* If found, shatter everything in between
+		* Else just shatter it
+	* If they're over the top, Game over
+	* If there is a block below them, place it and stop it from falling
