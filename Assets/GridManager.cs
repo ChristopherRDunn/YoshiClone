@@ -25,7 +25,6 @@ public class GridManager : MonoBehaviour
     void Start()
     {
         GeneratePlayGrid();
-        Invoke("GenerateStuff", 1);
 
         pieceTypeNames = new Dictionary<PieceType, string>
         {
@@ -73,8 +72,8 @@ public class GridManager : MonoBehaviour
                 PieceType randomPiece1 = (PieceType)random.Next(1, Enum.GetValues(typeof(PieceType)).Length);
                 PieceType randomPiece2 = (PieceType)random.Next(1, Enum.GetValues(typeof(PieceType)).Length);
                 // TODO: Randomize from the spaces not counting location 1
-                int location1 = random.Next(0, cols - 1);
-                int location2 = random.Next(0, cols - 1);
+                int location1 = random.Next(0, cols);
+                int location2 = random.Next(0, cols);
 
                 playGrid[0, location1].updatePiece(randomPiece1);
                 playGrid[0, location2].updatePiece(randomPiece2);
@@ -99,20 +98,6 @@ public class GridManager : MonoBehaviour
         float gridHeight = rows * tileSize;
     }
 
-    // Temp function to help me visualize
-    void GenerateStuff() 
-    {
-        // for (int i = 0; i < rows; i++)
-        // {
-        //     for (int j = 0; j < cols; j++)
-        //     {
-        //         playGrid[i, j].updatePiece(PieceType.Goomba);
-        //     }
-        // }
-
-        playGrid[0, 0].updatePiece(PieceType.Goomba);
-    }
-
     // Update the game objects to render the correct pieces in each box
     void OnGUI()
     {
@@ -121,17 +106,10 @@ public class GridManager : MonoBehaviour
             for (int col = 0; col < cols; col++)
             {
                 if (playGrid[row, col].hasNewPiece) {
-                    // TODO: Something about the game objects being destroyed and not recreated when the new piece is empty
                     Destroy(playGrid[row, col].gameObject);
-                    
-                    // Debug.Log("Update (" + row + ", " + col + "): " + playGrid[row, col].piece + " at: " + Time.time);
-                    if (playGrid[row, col].piece != PieceType.Empty)
-                    {
-                        GameObject prefab = (GameObject)Instantiate(Resources.Load(pieceTypeNames[playGrid[row, col].piece]));
-                        prefab.transform.position = new Vector3(getXCoord(col), getYCoord(row));
-                        playGrid[row, col].gameObject = prefab;
-                    }
-                    
+                    GameObject prefab = (GameObject)Instantiate(Resources.Load(pieceTypeNames[playGrid[row, col].piece]));
+                    prefab.transform.position = new Vector3(getXCoord(col), getYCoord(row));
+                    playGrid[row, col].gameObject = prefab;                    
                     playGrid[row, col].hasNewPiece = false;
                 }
             }
@@ -150,52 +128,45 @@ public class GridManager : MonoBehaviour
     void dropPiece(int row, int col)
     {
         // TODO: Think of a smarter way to bundle these branches
-        // TODO: bug here where sometimes piece think the empty space below them isn't empty
-        // I think it has to do with one of these branches not updating properly
         if (row == rows - 1)
-        {
-            // Place the piece
-            playGrid[row, col].isFalling = false;
+        { // At the bottom row
             if (playGrid[row, col].piece == PieceType.TopShell)
             {
-                playGrid[row, col].updatePiece(PieceType.Empty);
+                playGrid[row, col].shatter();
+            } else 
+            { // Place the piece
+                playGrid[row, col].place();
             }
         } else if (playGrid[row + 1, col].piece == PieceType.Empty) 
-        {
-            // Drop the piece 1 space
+        { // There's an empty space beneath
             playGrid[row + 1, col].updatePiece(playGrid[row, col].piece);
-            playGrid[row, col].updatePiece(PieceType.Empty);
-        } else // There is a block beneath
-        {
+            playGrid[row, col].shatter();
+        } else 
+        { // There is a block beneath
             if (playGrid[row, col].piece == playGrid[row + 1, col].piece)
-            {
-                // The pieces match, break em
-                playGrid[row, col].updatePiece(PieceType.Empty);
-                playGrid[row + 1, col].updatePiece(PieceType.Empty);
+            { // The pieces match, break em
+                playGrid[row, col].shatter();
+                playGrid[row + 1, col].shatter();
             } else if (playGrid[row, col].piece == PieceType.TopShell)
-            {
-                // Check for bottom shells, else shatter it
+            { // Check for bottom shells, else shatter it
                 for (int i = row + 1; i < rows; i++)
                 {
                     if (playGrid[i, col].piece == PieceType.BottomShell)
-                    {
-                        // Shatter everything between the top and bottom shell
+                    { // Found a matching bottom shell, shatter everything between them
                         for (int j = i; j > row; j--)
                         {
-                            playGrid[j, col].updatePiece(PieceType.Empty);
+                            playGrid[j, col].shatter();
                         }
                         break;
                     }
                 }
-                playGrid[row, col].updatePiece(PieceType.Empty);
+                playGrid[row, col].shatter();
             } else if (row == 0)
-            {
-                // Game over scenario
+            { // Game over scenario
                 Debug.Log("TODO: GAME OVER!~!");
             } else
-            {
-                // Place the piece
-                playGrid[row, col].isFalling = false;
+            { // Place the piece
+                playGrid[row, col].place();
             }
         }
     }
@@ -237,9 +208,20 @@ internal class PlaySpace
         {
             piece = newPiece;
             hasNewPiece = true;
-            if (newPiece == PieceType.Empty) isFalling = false;
-            else isFalling = true;
+            isFalling = true;
         }
+    }
+
+    public void shatter()
+    {
+        piece = PieceType.Empty;
+        hasNewPiece = true;
+        isFalling = false;
+    }
+
+    public void place()
+    {
+        isFalling = false;
     }
 }
 

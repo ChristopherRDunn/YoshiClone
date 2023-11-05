@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8215604714466446815}
   - component: {fileID: 8215604714466446814}
   m_Layer: 0
-  m_Name: Pirahna
+  m_Name: Piranha
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
